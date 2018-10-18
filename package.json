@@ -17,6 +17,7 @@
     "jquery": "^3.3.1",
     "request": "^2.88.0",
     "vue": "^2.5.2",
+    "vue-baidu-map": "^0.21.11",
     "vue-router": "^3.0.1"
   },
   "devDependencies": {

@@ -2,12 +2,15 @@
   <div>
     <p class="tit">广州二手房房价柱状图, 数据来源<a href="https://gz.lianjia.com/ershoufang/">链家二手房</a></p>
     <div class="echart-container">
-      <echart :page-num="pageNum"></echart>
+      <echart :page-num="pageNum" @getApiData="getApiData"></echart>
     </div>
     <div class="btn-group container">
       <button class="btn waves-effect waves-light" @click="--pageNum">上一页</button>
       <span style="margin: 0 15px;">{{pageNum}}</span>
       <button class="btn waves-effect waves-light" @click="++pageNum">下一页</button>
+    </div>
+    <div class="map-wrap echart-container">
+      <mapdata :page-num="pageNum"></mapdata>
     </div>
   </div>
 </template>
@@ -46,10 +49,12 @@
    width: 100%;
    max-width: 100%;
    text-align: center;
+   padding-bottom: 30px;
   }
 </style>
 <script>
   import echart from "@/components/echart";
+  import mapdata from "@/components/map";
   export default{
     data(){
       return {
@@ -62,7 +67,13 @@
       }
     },
     components: {
-      echart
+      echart,
+      mapdata
+    },
+    methods:{
+      getApiData(data){
+        console.log('data',data)
+      }
     }
   }
 </script>
