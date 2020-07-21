@@ -2,6 +2,7 @@ const express = require('express')
 const request = require('request')
 const cheerio = require('cheerio')
 const path = require('path')
+const axios = require('axios')
 
 let app = express()
 
@@ -18,36 +19,41 @@ app.get('/getData',(req,res) => {
 	let entryUrl = req.query.targetUrl
 
 	let getPage = (url,callback) => {
-		request(url,(err,res) => {
-			let $ = cheerio.load(res.body)
+		return axios({
+			method:'get',
+			url: url,
+
+		}).then((data)=>{
+			let $ = cheerio.load(data.data)
 			let list = $('.sellListContent').find('li').find('.info')
 
-			for(let i = 0, len = list.length;i < len; i++){
+			// console.log(list.length);
+			for (let index = 0; index < list.length; index++) {
+				const curInfoItem = $(list[index]);
 				let data = {
 					title: {
-						title: list.find('.title').find('a')[i].children[0].data,
-						link: list.find('.title').find('a')[i].attribs.href
+						title: curInfoItem.find('a').html(),
+						link: curInfoItem.find('a').attr('href')
 					},
 					address: {
-						address: list.find('.address').find('.houseInfo').find('a')[i].children[0].data,
-						addressLink: list.find('.address').find('.houseInfo').find('a')[i].attribs.href
+						// address: list.find('.address').find('.houseInfo').find('a')[i].children[0].data,
+						// addressLink: list.find('.address').find('.houseInfo').find('a')[i].attribs.href
 					},
 					flood: {
-						position: list.find('.flood').find('.positionInfo')[i].children[1].data
+						// position: list.find('.flood').find('.positionInfo')[i].children[1].data
 					},
 					priceInfo: {
-						totalPrice: list.find('.priceInfo').find('.totalPrice').find('span')[i].children[0].data + '万',
-						unitPrice: list.find('.priceInfo').find('.unitPrice').find('span')[i].children[0].data
+						// totalPrice: list.find('.priceInfo').find('.totalPrice').find('span')[i].children[0].data + '万',
+						// unitPrice: list.find('.priceInfo').find('.unitPrice').find('span')[i].children[0].data
 					}
 				}
 				contentArr.push(data)
 			}
-			callback(contentArr)
 		})
 	}
 
-	getPage(entryUrl,(data) => {
-		res.send(data)
+	getPage(entryUrl).then(() => {
+		res.send(contentArr)
 	})
 })
 

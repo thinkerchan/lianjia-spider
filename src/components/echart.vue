@@ -39,7 +39,7 @@
 	import echarts from 'echarts'
 	import $ from 'jquery'
 	import bus from '../asset/bus.js'
-	let key = '3kHfWzjXEIz1toe93VNGHijHU0V7noeP';
+	let key = 'czOpOkWeUWk1jTMekpxY5KZy5TEhqjPh';
 	export default{
 		props: {
 			pageNum: {
