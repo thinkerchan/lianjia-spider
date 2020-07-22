@@ -6,6 +6,12 @@ import router from './router'
 
 Vue.config.productionTip = false
 
+Vue.prototype.$config = {
+  ak:'czOpOkWeUWk1jTMekpxY5KZy5TEhqjPh',
+  mapKey:'3kHfWzjXEIz1toe93VNGHijHU0V7noeP',
+  city:'广州',
+}
+
 /* eslint-disable no-new */
 window._app = new Vue({
   el: '#app',

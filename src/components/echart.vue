@@ -1,43 +1,18 @@
 <template>
-	<div class="contain-box">
+	<div class="compo-echart contain-box">
 		<div class="container loading-container" v-show="isLoading">
 			<div class="preloader-wrapper">
 				<p>Loading...</p>
 			</div>
 		</div>
-		<div id="echart_box" class="echart-box"></div>
+		<div id="JechartBox" class="echart-box"></div>
 	</div>
-
 </template>
-<style lang="scss" >
-	.contain-box{
-		position: relative;
-		width: 100%;
-		height: 500px;
-		.loading-container{
-			position: absolute;
-			width: 100%;
-			max-width: 100% !important;
-			height: 100%;
-			z-index: 1000;
-			background: rgba(255,255,255,.6);
-			.preloader-wrapper{
-				position: absolute;
-				top: 50%;
-				left: 50%;
-				margin-top: -32px;
-				margin-left: -32px;
-			}
-		}
-		.echart-box{
-			width: 100%;
-			height: 500px;
-		}
-	}
-</style>
+
 <script lang="babel">
 	import echarts from 'echarts'
-	import $ from 'jquery'
+	import pjsonp from 'pjsonp'
+	import axios from "axios";
 	import bus from '../asset/bus.js'
 	let key = 'czOpOkWeUWk1jTMekpxY5KZy5TEhqjPh';
 	export default{
@@ -54,64 +29,58 @@
 				addressList: [],
 				priceList: [],
 				echarts: require('echarts/lib/echarts'),
-				dataUrl: 'http://localhost:3000/getData',
+				url: 'http://localhost:3000/getData',
 				posData:[],
 				dataArr:[],
 			}
 		},
 		watch: {
 			pageNum(){
-				this.getData()
+				this.getData(this.url)
 			}
 		},
 		mounted(){
-
-			this.getData()
+			this.getData(this.url)
 			require('echarts/lib/chart/bar')
 			require('echarts/lib/component/tooltip')
 			require('echarts/lib/component/title')
-
 		},
 		methods: {
-			genData(data){
+			genData(addressArr){
 				let that = this;
-				// 去重
-				for (var i = 0; i < data.length; i++) {
-          this.dataArr.push(data[i].address.address)
-        }
-        let addArr = Array.from(new Set(this.dataArr));
-        // console.log(addArr)
-        // return;
+				that.posData = [];
 
-        // 解析坐标
+        let addArr = Array.from(new Set(addressArr));	// 小区去重
 				for (let i = 0; i < addArr.length; i++) {
-				  $.ajax({
-				    url: `https://api.map.baidu.com/geocoder/v2/?address=${addArr[i]}&output=json&ak=${key}&callback=showLocation&city=广州`,
-				    type: 'GET',
-				    dataType:'jsonp',
-				    data: {},
-				    success: function (data) {
-				      if (data.status=='0') {
-				        that.posData.push({
-				        	pos:data.result.location,
-				        	name:addArr[i]
-				        })
-				      }
-				    }
-				  });
+					// 此api支持jsonp就直接jsonp,或者可以反向代理
+					pjsonp(`https://api.map.baidu.com/geocoding/v3/?`,{
+						address: addArr[i],
+						output: 'json',
+						ak:that.$config.ak,
+						city:that.$config.city,
+					},{ }).then((data)=>{
+						if (data.status=='0') {
+							that.posData.push({
+								pos:data.result.location,
+								name:addArr[i]
+							})
+						}
+					})
 				}
 
+				bus.$emit('send', that.posData)
 			},
-			setEcharts(that){
+			setEcharts(addressList,priceList){
 				// 设置echarts
-				let myChart = echarts.init(document.getElementById('echart_box'))
+				let myChart = echarts.init(document.getElementById('JechartBox'))
 				myChart.setOption({
 					tooltip: {},
 					grid:{
 						bottom: '20%'
 					},
 					xAxis: {
-						data: that.addressList,
+						name:'小区',
+						data: addressList,
 						axisLabel: {
 							interval:0,
 							margin: 10,
@@ -121,46 +90,50 @@
 							}
 						}
 					},
-					yAxis: {},
+					yAxis: {
+						name:'总价(万)',
+					},
 					series: [{
 						name: '总价',
 						type: 'bar',
-						data: that.priceList
+						data: priceList
 					}],
 					color: ['#3398DB']
 				})
-				that.isLoading = false
+
 			},
-			getData(){
+			getData(url){
 				let that = this
 				this.isLoading = true
+
 				this.addressList = []
 				this.priceList = []
-				$.ajax({
-					url: that.dataUrl,
+
+				axios({
+					url,
 					method: 'get',
-					data: {
+					params:{
 						targetUrl: 'https://gz.lianjia.com/ershoufang/pg' + that.pageNum
-					},
-					dataType: 'json',
-					success: data => {
-						for(let i = 0,len = data.length; i<len; i++){
-							that.addressList.push(data[i].address.address)
-							that.priceList.push(parseInt(data[i].priceInfo.totalPrice.replace('万',''),10))
-						}
-						that.setEcharts(that);
-						// 解析坐标
-						let pro = new Promise((resolve, reject)=>{
-							that.genData(data)
-							resolve && resolve();
- 						})
-						pro.then(()=>{
-							// 传递数据到map组件
-							bus.$emit('send', that.posData)
-						})
 					}
+				}).then((data)=>{
+					let res = data.data
+
+					for(let i = 0,len = res.length; i<len; i++){
+						let curItem = res[i]
+						that.addressList.push(curItem.address.communityName)
+						that.priceList.push(parseInt(curItem.priceInfo.totalPrice.replace('万',''),10))
+					}
+
+					that.setEcharts(that.addressList, that.priceList);
+					that.isLoading = false
+
+					that.genData(that.addressList)
 				})
 			}
 		}
 	}
 </script>
+
+<style lang="scss" >
+	@import '@/asset/app.scss';
+</style>
