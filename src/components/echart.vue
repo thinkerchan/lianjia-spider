@@ -14,7 +14,6 @@
 	import pjsonp from 'pjsonp'
 	import axios from "axios";
 	import bus from '../asset/bus.js'
-	let key = 'czOpOkWeUWk1jTMekpxY5KZy5TEhqjPh';
 	export default{
 		props: {
 			pageNum: {
@@ -24,12 +23,15 @@
 			}
 		},
 		data(){
+			console.log(location.protocol+'//'+location.hostname);
+
 			return {
 				isLoading: false,
 				addressList: [],
 				priceList: [],
 				echarts: require('echarts/lib/echarts'),
-				url: 'http://localhost:3000/getData',
+				// url: 'http://localhost:3000/getData',
+				url: location.protocol+'//'+location.hostname+':3000/getData',
 				posData:[],
 				dataArr:[],
 			}

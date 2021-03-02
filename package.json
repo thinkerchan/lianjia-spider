@@ -16,7 +16,6 @@
     "echarts": "^4.2.0-rc.1",
     "express": "^4.16.4",
     "pjsonp": "^1.0.1",
-    "request": "^2.88.0",
     "vue": "^2.5.2",
     "vue-baidu-map": "^0.21.11",
     "vue-router": "^3.0.1"
